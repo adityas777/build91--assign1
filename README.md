@@ -94,6 +94,7 @@ Open `http://localhost:5173` in your browser.
 
 ## Known Assumptions & Limitations
 
+- **Pipeline Transition Restrictions**: Project status and Room stage can only transition to an adjacent step in their defined pipeline (one step forward or backward) — arbitrary jumps (e.g. Submitted directly to Done) are rejected by the backend and hidden from the frontend dropdown.
 - **Project Date Validation**: Target delivery date must be on or after the start date; this is validated on the backend (and cannot be bypassed via direct API calls) as well as the frontend for immediate UX feedback.
 - **S3 Signed URL Model**: S3 bucket is assumed to be private. Previews/Downloads utilize presigned URLs with 1-hour expiration.
 - **Client-Side CAD Previews**: AutoCAD files (`.dwg`, `.dxf`) are stored, managed, and downloadable. They are not rendered visually in-browser because client-side parsing of CAD binaries is outside the scope of this MVP.

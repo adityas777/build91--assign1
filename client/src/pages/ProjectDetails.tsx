@@ -185,11 +185,16 @@ export default function ProjectDetails() {
               onChange={(e) => handleStatusChange(e.target.value as Project["status"])}
               className="py-1.5 px-2.5 border border-slate-200 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50 cursor-pointer"
             >
-              <option value="Submitted">Submitted</option>
-              <option value="Approved">Approved</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Review">Review</option>
-              <option value="Done">Done</option>
+              {(() => {
+                const PROJECT_FLOW = ["Submitted", "Approved", "In Progress", "Review", "Done"];
+                const currentStatusIdx = PROJECT_FLOW.indexOf(project.status);
+                const allowedStatuses = PROJECT_FLOW.filter((_, idx) => Math.abs(idx - currentStatusIdx) <= 1);
+                return allowedStatuses.map((statusVal) => (
+                  <option key={statusVal} value={statusVal}>
+                    {statusVal}
+                  </option>
+                ));
+              })()}
             </select>
           </div>
         </div>

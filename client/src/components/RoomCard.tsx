@@ -136,12 +136,16 @@ export default function RoomCard({ room }: RoomCardProps) {
             onChange={(e) => setStage(e.target.value as any)}
             className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50 cursor-pointer"
           >
-            <option value="Modeling">Modeling</option>
-            <option value="Internal Review">Internal Review</option>
-            <option value="Rendering">Rendering</option>
-            <option value="QA Review">QA Review</option>
-            <option value="Final Renders">Final Renders</option>
-            <option value="Completed">Completed</option>
+            {(() => {
+              const ROOM_FLOW = ["Modeling", "Internal Review", "Rendering", "QA Review", "Final Renders", "Completed"];
+              const currentStageIdx = ROOM_FLOW.indexOf(room.stage);
+              const allowedStages = ROOM_FLOW.filter((_, idx) => Math.abs(idx - currentStageIdx) <= 1);
+              return allowedStages.map((stageVal) => (
+                <option key={stageVal} value={stageVal}>
+                  {stageVal}
+                </option>
+              ));
+            })()}
           </select>
         </div>
 

@@ -75,12 +75,33 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+const PROJECT_FLOW = ["Submitted", "Approved", "In Progress", "Review", "Done"];
+
+function isValidProjectTransition(current: string, next: string): boolean {
+  const currentIdx = PROJECT_FLOW.indexOf(current);
+  const nextIdx = PROJECT_FLOW.indexOf(next);
+  if (currentIdx === -1 || nextIdx === -1) return false;
+  return Math.abs(currentIdx - nextIdx) === 1;
+}
+
 // PUT update project
 router.put("/:id", async (req, res, next) => {
   try {
     const existingProject = await Project.findById(req.params.id);
     if (!existingProject) {
       return res.status(404).json({ error: { message: "Project not found", status: 404 } });
+    }
+
+    // Enforce sequential transition if status is changed
+    if (req.body.status && req.body.status !== existingProject.status) {
+      if (!isValidProjectTransition(existingProject.status, req.body.status)) {
+        return res.status(400).json({
+          error: {
+            message: `Cannot move status from "${existingProject.status}" to "${req.body.status}" — only sequential transitions are allowed`,
+            status: 400
+          }
+        });
+      }
     }
 
     const mergedStartDate = req.body.startDate !== undefined ? req.body.startDate : existingProject.startDate;

@@ -56,17 +56,40 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+const ROOM_FLOW = ["Modeling", "Internal Review", "Rendering", "QA Review", "Final Renders", "Completed"];
+
+function isValidRoomTransition(current: string, next: string): boolean {
+  const currentIdx = ROOM_FLOW.indexOf(current);
+  const nextIdx = ROOM_FLOW.indexOf(next);
+  if (currentIdx === -1 || nextIdx === -1) return false;
+  return Math.abs(currentIdx - nextIdx) === 1;
+}
+
 // PUT update room
 router.put("/:id", async (req, res, next) => {
   try {
+    const existingRoom = await Room.findById(req.params.id);
+    if (!existingRoom) {
+      return res.status(404).json({ error: { message: "Room not found", status: 404 } });
+    }
+
+    // Enforce sequential transition if stage is changed
+    if (req.body.stage && req.body.stage !== existingRoom.stage) {
+      if (!isValidRoomTransition(existingRoom.stage, req.body.stage)) {
+        return res.status(400).json({
+          error: {
+            message: `Cannot move stage from "${existingRoom.stage}" to "${req.body.stage}" — only sequential transitions are allowed`,
+            status: 400
+          }
+        });
+      }
+    }
+
     const room = await Room.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
       { new: true, runValidators: true }
     );
-    if (!room) {
-      return res.status(404).json({ error: { message: "Room not found", status: 404 } });
-    }
     res.json(room);
   } catch (err) {
     next(err);
