@@ -54,6 +54,14 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: { message: "Name and client are required", status: 400 } });
     }
 
+    if (startDate && targetDate) {
+      const start = new Date(startDate);
+      const target = new Date(targetDate);
+      if (target < start) {
+        return res.status(400).json({ error: { message: "Target date cannot be before start date", status: 400 } });
+      }
+    }
+
     const project = await Project.create({
       name,
       client,
@@ -70,14 +78,27 @@ router.post("/", async (req, res, next) => {
 // PUT update project
 router.put("/:id", async (req, res, next) => {
   try {
+    const existingProject = await Project.findById(req.params.id);
+    if (!existingProject) {
+      return res.status(404).json({ error: { message: "Project not found", status: 404 } });
+    }
+
+    const mergedStartDate = req.body.startDate !== undefined ? req.body.startDate : existingProject.startDate;
+    const mergedTargetDate = req.body.targetDate !== undefined ? req.body.targetDate : existingProject.targetDate;
+
+    if (mergedStartDate && mergedTargetDate) {
+      const start = new Date(mergedStartDate);
+      const target = new Date(mergedTargetDate);
+      if (target < start) {
+        return res.status(400).json({ error: { message: "Target date cannot be before start date", status: 400 } });
+      }
+    }
+
     const project = await Project.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
       { new: true, runValidators: true }
     );
-    if (!project) {
-      return res.status(404).json({ error: { message: "Project not found", status: 404 } });
-    }
     res.json(project);
   } catch (err) {
     next(err);

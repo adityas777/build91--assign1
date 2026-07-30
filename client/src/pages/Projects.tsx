@@ -24,6 +24,7 @@ export default function Projects() {
   const [startDate, setStartDate] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [dateError, setDateError] = useState("");
 
   // Query projects
   const { data: projects = [], isLoading, isError } = useQuery({
@@ -34,19 +35,24 @@ export default function Projects() {
     }),
   });
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setName("");
+    setClientName("");
+    setStatus("Submitted");
+    setStartDate("");
+    setTargetDate("");
+    setErrorMessage("");
+    setDateError("");
+  };
+
   // Mutation to create a project
   const createMutation = useMutation({
     mutationFn: createProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
-      setIsModalOpen(false);
-      setName("");
-      setClientName("");
-      setStatus("Submitted");
-      setStartDate("");
-      setTargetDate("");
-      setErrorMessage("");
+      closeModal();
     },
     onError: (error: any) => {
       setErrorMessage(error?.response?.data?.error?.message || "Failed to create project");
@@ -68,6 +74,16 @@ export default function Projects() {
       setErrorMessage("Project Name and Client Name are required");
       return;
     }
+
+    if (startDate && targetDate) {
+      const start = new Date(startDate);
+      const target = new Date(targetDate);
+      if (target < start) {
+        setDateError("Target date cannot be before start date");
+        return;
+      }
+    }
+
     createMutation.mutate({
       name,
       client: clientName,
@@ -281,7 +297,10 @@ export default function Projects() {
                     <input
                       type="date"
                       value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+                      onChange={(e) => {
+                        setStartDate(e.target.value);
+                        setDateError("");
+                      }}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -290,9 +309,15 @@ export default function Projects() {
                     <input
                       type="date"
                       value={targetDate}
-                      onChange={(e) => setTargetDate(e.target.value)}
+                      onChange={(e) => {
+                        setTargetDate(e.target.value);
+                        setDateError("");
+                      }}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    {dateError && (
+                      <p className="text-red-500 text-[10px] mt-1 font-semibold">{dateError}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -300,7 +325,7 @@ export default function Projects() {
               <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-100 transition-colors font-medium"
                 >
                   Cancel
