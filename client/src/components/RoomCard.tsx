@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateRoom, deleteRoom } from "../api/rooms";
 import type { Room } from "../api/rooms";
+import { useToast } from "../context/ToastContext";
 import { 
   UserIcon, 
   CalendarIcon, 
   LayersIcon, 
   Trash2Icon, 
-  MessageSquareIcon,
-  CheckIcon
+  MessageSquareIcon
 } from "lucide-react";
 import AssetManager from "./AssetManager";
 
@@ -18,6 +18,7 @@ interface RoomCardProps {
 
 export default function RoomCard({ room }: RoomCardProps) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // Local form states
   const [assignedArtist, setAssignedArtist] = useState(room.assignedArtist || "");
@@ -27,8 +28,6 @@ export default function RoomCard({ room }: RoomCardProps) {
   const [stage, setStage] = useState(room.stage);
   const [progress, setProgress] = useState(room.progress);
   const [reviewerComments, setReviewerComments] = useState(room.reviewerComments || "");
-  
-  const [isSaved, setIsSaved] = useState(false);
 
   // Check if form is dirty
   const isDirty = 
@@ -44,8 +43,10 @@ export default function RoomCard({ room }: RoomCardProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rooms", room.projectId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 3000);
+      toast("Scene details updated successfully", "success");
+    },
+    onError: (error: any) => {
+      toast(error?.response?.data?.error?.message || "Failed to save scene changes", "error");
     }
   });
 
@@ -56,6 +57,10 @@ export default function RoomCard({ room }: RoomCardProps) {
       queryClient.invalidateQueries({ queryKey: ["rooms", room.projectId] });
       queryClient.invalidateQueries({ queryKey: ["assets", room.projectId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      toast("Scene deleted successfully", "success");
+    },
+    onError: (error: any) => {
+      toast(error?.response?.data?.error?.message || "Failed to delete scene", "error");
     }
   });
 
@@ -76,24 +81,24 @@ export default function RoomCard({ room }: RoomCardProps) {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_12px_35px_rgba(59,130,246,0.04)] transition-all duration-300 overflow-hidden flex flex-col justify-between">
+    <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:border-slate-300 transition-colors">
       {/* Header */}
-      <div className="bg-slate-50/40 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+      <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
         <div>
-          <h4 className="font-extrabold text-slate-800 text-sm tracking-tight">{room.name}</h4>
+          <h4 className="font-bold text-slate-900 text-xs tracking-tight">{room.name}</h4>
           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Production Scene</span>
         </div>
         <button
           onClick={handleDelete}
-          className="text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 border border-transparent hover:border-slate-100 transition-colors"
+          className="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-slate-100 border border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
           title="Delete Room"
         >
-          <Trash2Icon className="w-4 h-4" />
+          <Trash2Icon className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Body / Settings */}
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-3">
         {/* Artist Input */}
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
@@ -104,7 +109,7 @@ export default function RoomCard({ room }: RoomCardProps) {
             value={assignedArtist}
             onChange={(e) => setAssignedArtist(e.target.value)}
             placeholder="Artist Name"
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
+            className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
           />
         </div>
 
@@ -117,7 +122,7 @@ export default function RoomCard({ room }: RoomCardProps) {
             type="date"
             value={targetDeliveryDate}
             onChange={(e) => setTargetDeliveryDate(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
+            className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
           />
         </div>
 
@@ -129,7 +134,7 @@ export default function RoomCard({ room }: RoomCardProps) {
           <select
             value={stage}
             onChange={(e) => setStage(e.target.value as any)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50 cursor-pointer"
+            className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50 cursor-pointer"
           >
             <option value="Modeling">Modeling</option>
             <option value="Internal Review">Internal Review</option>
@@ -153,7 +158,7 @@ export default function RoomCard({ room }: RoomCardProps) {
               max="100"
               value={progress}
               onChange={(e) => setProgress(Number(e.target.value))}
-              className="w-full h-1.5 bg-slate-100 border border-slate-200/50 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              className="w-full h-1.5 bg-slate-100 border border-slate-200/50 rounded appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -168,36 +173,34 @@ export default function RoomCard({ room }: RoomCardProps) {
             onChange={(e) => setReviewerComments(e.target.value)}
             placeholder="Add comments, change requests, or QA feedback..."
             rows={2}
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50 resize-none"
+            className="w-full px-2.5 py-1.5 border border-slate-200 rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50 resize-none"
           />
         </div>
 
-        {/* Room Specific Assets Collapsible */}
-        <div className="border-t border-slate-100 pt-4 mt-2">
+        {/* Scene Specific Assets */}
+        <div className="border-t border-slate-100 pt-3 mt-1">
           <AssetManager projectId={room.projectId} roomId={room._id} title="Scene Assets" />
         </div>
       </div>
 
       {/* Footer Save Area */}
-      <div className="bg-slate-50/40 px-6 py-3 border-t border-slate-100 flex justify-between items-center h-14">
+      <div className="bg-slate-50 px-4 py-2 border-t border-slate-200 flex justify-between items-center h-12">
         <div>
-          {isSaved && (
-            <span className="text-xs text-green-600 font-semibold flex items-center gap-1">
-              <CheckIcon className="w-4 h-4" /> Saved
-            </span>
+          {updateMutation.isPending && (
+            <span className="text-[10px] text-slate-400 font-semibold">Saving...</span>
           )}
         </div>
         
         <button
           onClick={handleSave}
           disabled={!isDirty || updateMutation.isPending}
-          className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md transition-all active:scale-95 ${
+          className={`px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
             isDirty 
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white cursor-pointer shadow-blue-500/10 hover:shadow-blue-500/20"
-              : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/50"
+              ? "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+              : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/50 shadow-none"
           }`}
         >
-          {updateMutation.isPending ? "Saving..." : "Save Scene"}
+          Save Details
         </button>
       </div>
     </div>
