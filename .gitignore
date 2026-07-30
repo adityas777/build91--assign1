@@ -1,0 +1,34 @@
+# Dependency directories
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment files (sensitive credentials)
+.env
+client/.env
+server/.env
+
+# Production build outputs
+dist/
+client/dist/
+server/dist/
+
+# IDE / editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
